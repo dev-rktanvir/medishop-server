@@ -29,11 +29,31 @@ async function run() {
 
         // DB collections
         const usersCollection = client.db('MediShopDB').collection('users')
-        
-        // Api for add user
+        const adsCollection = client.db('MediShopDB').collection('ads')
+
+        // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
+            const { email } = req.body;
+            const userExist = await usersCollection.findOne({ email })
+
+            if (userExist) {
+                return res.status(200).send({message: 'user already exists', inserted: false})
+            }
+
             const newUser = req.body;
             const result = await usersCollection.insertOne(newUser)
+            res.send(result);
+        })
+        // Api for request Advertisement
+        app.post('/ads', async (req, res) => {
+            const newAd = req.body;
+            const result = await adsCollection.insertOne(newAd)
+            res.send(result);
+        })
+        // Api for get Advertisment
+        app.get('/ads', async (req, res) => {
+            const email = req.params.email;
+            const result = await adsCollection.find({email}).toArray()
             res.send(result);
         })
 
