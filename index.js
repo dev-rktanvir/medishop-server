@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -37,13 +37,37 @@ async function run() {
             const userExist = await usersCollection.findOne({ email })
 
             if (userExist) {
-                return res.status(200).send({message: 'user already exists', inserted: false})
+                return res.status(200).send({ message: 'user already exists', inserted: false })
             }
 
             const newUser = req.body;
             const result = await usersCollection.insertOne(newUser)
             res.send(result);
         })
+
+        // .............................. API For Admin .................................................
+
+        // Api For get pending ads 
+        app.get('/all-ads', async (req, res) => {
+            const filter = { status: { $in: ["pending", "active"] } };
+            const result = await adsCollection.find(filter).toArray();
+            res.send(result);
+        })
+
+        // Api for update ads status
+        app.patch('/ads/status', async (req, res) => {
+            const { id, status } = req.body;
+
+            const query = { _id: new ObjectId(id) };
+            const update = { $set: { status: status } };
+
+            const result = await adsCollection.updateOne(query, update)
+            res.send(result);
+        })
+
+
+        // ........................... API For Seller.....................................................
+
         // Api for request Advertisement
         app.post('/ads', async (req, res) => {
             const newAd = req.body;
@@ -53,9 +77,17 @@ async function run() {
         // Api for get Advertisment
         app.get('/ads', async (req, res) => {
             const email = req.params.email;
-            const result = await adsCollection.find({email}).toArray()
+            const result = await adsCollection.find({ email }).toArray()
             res.send(result);
         })
+        app.delete('/ads/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await adsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // ...................................... API For User ....................................
 
 
 
