@@ -30,6 +30,7 @@ async function run() {
         // DB collections
         const usersCollection = client.db('MediShopDB').collection('users')
         const adsCollection = client.db('MediShopDB').collection('ads')
+        const categoryCollection = client.db('MediShopDB').collection('category')
 
         // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
@@ -62,6 +63,21 @@ async function run() {
             const update = { $set: { status: status } };
 
             const result = await adsCollection.updateOne(query, update)
+            res.send(result);
+        })
+
+        // Category..................................
+
+        // Api for get category data
+        app.get('/cats', async (req, res) => {
+            const result = await categoryCollection.find().toArray();
+            res.send(result);
+        })
+
+        // Api for add category data
+        app.post('/cats', async (req, res) => {
+            const newCategory = req.body;
+            const result = await categoryCollection.insertOne(newCategory)
             res.send(result);
         })
 
