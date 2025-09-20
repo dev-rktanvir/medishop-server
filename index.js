@@ -93,6 +93,14 @@ async function run() {
             res.send(result);
         });
 
+        // Api for delete category
+        app.delete('/cats/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await categoryCollection.deleteOne(query);
+            res.send(result);
+        });
+
 
         // ........................... API For Seller.....................................................
 
