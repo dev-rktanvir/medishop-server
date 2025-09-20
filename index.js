@@ -81,6 +81,18 @@ async function run() {
             res.send(result);
         })
 
+        // Api for update category
+        app.patch('/cats/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedFields = req.body;
+
+            const query = { _id: new ObjectId(id) };
+            const update = { $set: updatedFields };
+
+            const result = await categoryCollection.updateOne(query, update)
+            res.send(result);
+        });
+
 
         // ........................... API For Seller.....................................................
 
