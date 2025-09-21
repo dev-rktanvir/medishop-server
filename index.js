@@ -104,6 +104,12 @@ async function run() {
 
         // Medicine...........
 
+        // Api for get medicine
+        app.get('/medicine', async (req, res) => {
+            const result = await medicinesCollection.find().toArray()
+            res.send(result);
+        })
+        
         // Api for add medicine
         app.post('/medicine', async (req, res) => {
             const newMedicine = req.body;
