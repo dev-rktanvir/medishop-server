@@ -32,6 +32,7 @@ async function run() {
         const adsCollection = client.db('MediShopDB').collection('ads')
         const categoryCollection = client.db('MediShopDB').collection('category')
         const medicinesCollection = client.db('MediShopDB').collection('medicines')
+        const cartItemsCollection = client.db('MediShopDB').collection('cartItems')
 
         // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
@@ -44,6 +45,26 @@ async function run() {
 
             const newUser = req.body;
             const result = await usersCollection.insertOne(newUser)
+            res.send(result);
+        })
+        // Cart Items...........
+        app.post('/cart', async (req, res) => {
+            const { name, buyer, company, quantity } = req.body;
+            const cartItem = req.body;
+            const filter = { name, buyer, company };
+
+            const existingItem = await cartItemsCollection.findOne(filter);
+
+            if (existingItem) {
+                const updatedResult = await cartItemsCollection.updateOne(
+                    filter,
+                    {
+                        $inc: { quantity: quantity }
+                    }
+                );
+                res.send(updatedResult);
+            }
+            const result = await cartItemsCollection.insertOne(cartItem)
             res.send(result);
         })
 
@@ -106,10 +127,24 @@ async function run() {
 
         // Api for get medicine
         app.get('/medicine', async (req, res) => {
-            const result = await medicinesCollection.find().toArray()
+            const email = req.query.email;
+            const filter = {};
+
+            if (email) {
+                filter.sellerEmail = email;
+            }
+
+            const result = await medicinesCollection.find(filter).toArray();
             res.send(result);
         })
-        
+
+        // Api for get specific category medicine
+        app.get('/medicine/:name', async (req, res) => {
+            const name = req.params.name;
+            const result = await medicinesCollection.find({ category: name }).toArray();
+            res.send(result);
+        })
+
         // Api for add medicine
         app.post('/medicine', async (req, res) => {
             const newMedicine = req.body;
