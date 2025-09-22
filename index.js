@@ -48,6 +48,15 @@ async function run() {
             res.send(result);
         })
         // Cart Items...........
+
+        // Api for Get Cart
+        app.get('/cart', async (req, res) => {
+            const buyer = req.query.buyer;
+            const result = await cartItemsCollection.find({ buyer }).toArray();
+            res.send(result);
+        })
+
+        // Api for Add to cart
         app.post('/cart', async (req, res) => {
             const { name, buyer, company, quantity } = req.body;
             const cartItem = req.body;
@@ -65,6 +74,47 @@ async function run() {
                 res.send(updatedResult);
             }
             const result = await cartItemsCollection.insertOne(cartItem)
+            res.send(result);
+        })
+
+        // Api for update cart
+        app.patch('/cart/:id', async (req, res) => {
+            const id = req.params.id;
+            const { action } = req.body;
+
+            const item = await cartItemsCollection.findOne({ _id: new ObjectId(id) });
+
+            // Decrease Item
+            if (action === 'decrease') {
+                if (item.quantity <= 1) {
+                    const result = await cartItemsCollection.deleteOne({ _id: new ObjectId(id) });
+                    return res.send(result);
+                } else {
+                    const result = await cartItemsCollection.updateOne(
+                        { _id: new ObjectId(id) },
+                        { $inc: { quantity: -1 } }
+                    );
+                    return res.send(result);
+                }
+            }
+            // Increase Item
+            const result = await cartItemsCollection.updateOne(
+                { _id: new ObjectId(id) },
+                { $inc: { quantity: 1 } }
+            );
+            res.send(result);
+        })
+
+        // Api for delete cart
+        app.delete('/cart', async (req, res) => {
+            const { id, buyer } = req.query;
+
+            if (buyer) {
+                const result = await cartItemsCollection.deleteMany({ buyer });
+                return res.send(result);
+            }
+
+            const result = await cartItemsCollection.deleteOne({ _id: new ObjectId(id) })
             res.send(result);
         })
 
