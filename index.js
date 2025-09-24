@@ -77,6 +77,21 @@ async function run() {
 
         // Orders .............
 
+        // Api for get all ordrs
+        app.get('/orders', async (req, res) => {
+            const email = req.query.email;
+            const buyer = req.query.buyer;
+            const filter = {}
+
+            if (email) {
+                filter["items.seller"] = email;
+            }
+            if (buyer) {
+                filter.buyerEmail = buyer;
+            }
+            const result = await ordersCollection.find(filter).toArray()
+            res.send(result);
+        })
         // Api for Order create
         app.post('/orders', async (req, res) => {
             const newOrder = req.body;
@@ -90,6 +105,26 @@ async function run() {
             const result = await ordersCollection.findOne({ _id: new ObjectId(id) })
             res.send(result);
         })
+
+        // Api for patch specific order
+        app.put('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const { transactionId } = req.body;
+            const filter = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    paymentStatus: 'paid',
+                    transId: transactionId,
+                    paidAt: new Date().toISOString(),
+                },
+            };
+
+            const result = await ordersCollection.updateOne(filter, updateDoc);
+
+            res.send(result);
+        });
+
 
         // Cart Items...........
 
