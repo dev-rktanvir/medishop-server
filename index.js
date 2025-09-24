@@ -4,6 +4,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.Payment_Secret_Key);
 
 // Middleware
 app.use(cors());
@@ -56,6 +57,24 @@ async function run() {
             res.send(result);
         })
 
+        // Api for payment intant
+        app.post("/create-payment-intent", async (req, res) => {
+            const amount = req.body.amount;
+            try {
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount,
+                    currency: "usd",
+                    payment_method_types: ["card"],
+                });
+
+                res.send({
+                    clientSecret: paymentIntent.client_secret,
+                });
+            } catch (err) {
+                res.status(500).send({ error: "Payment failed" });
+            }
+        });
+
         // Orders .............
 
         // Api for Order create
@@ -68,7 +87,7 @@ async function run() {
         // Api for get specific orders
         app.get('/orders/:id', async (req, res) => {
             const id = req.params.id;
-            const result = await ordersCollection.findOne({_id: new ObjectId(id)})
+            const result = await ordersCollection.findOne({ _id: new ObjectId(id) })
             res.send(result);
         })
 
