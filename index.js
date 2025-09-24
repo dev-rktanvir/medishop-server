@@ -33,6 +33,7 @@ async function run() {
         const categoryCollection = client.db('MediShopDB').collection('category')
         const medicinesCollection = client.db('MediShopDB').collection('medicines')
         const cartItemsCollection = client.db('MediShopDB').collection('cartItems')
+        const ordersCollection = client.db('MediShopDB').collection('orders')
 
         // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
@@ -47,6 +48,30 @@ async function run() {
             const result = await usersCollection.insertOne(newUser)
             res.send(result);
         })
+
+        // Api for user get
+        app.get('/users', async (req, res) => {
+            const email = req.query.email;
+            const result = await usersCollection.find({ email }).toArray()
+            res.send(result);
+        })
+
+        // Orders .............
+
+        // Api for Order create
+        app.post('/orders', async (req, res) => {
+            const newOrder = req.body;
+            const result = await ordersCollection.insertOne(newOrder)
+            res.send(result);
+        })
+
+        // Api for get specific orders
+        app.get('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await ordersCollection.findOne({_id: new ObjectId(id)})
+            res.send(result);
+        })
+
         // Cart Items...........
 
         // Api for Get Cart
