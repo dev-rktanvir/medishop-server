@@ -79,6 +79,29 @@ async function run() {
             res.send(result);
         });
 
+        // Api for varify user role
+        app.get('/user-role', async (req, res) => {
+            const email = req.query.email;
+
+            // Validate email
+            if (!email) {
+                return res.status(400).send({ error: 'Email is required' });
+            }
+
+            try {
+                const user = await usersCollection.findOne({ email });
+
+                if (!user) {
+                    return res.status(404).send({ error: 'User not found' });
+                }
+
+                res.send({ role: user.role });
+            } catch (error) {
+                console.error('Error fetching user role:', error);
+                res.status(500).send({ error: 'Internal Server Error' });
+            }
+        });
+
 
 
         // Api for payment intant
@@ -158,6 +181,46 @@ async function run() {
             res.send(result);
         });
 
+        // Api for Revenue
+        app.get('/revenue', async (req, res) => {
+            const email = req.query.email;
+
+            const allOrders = await ordersCollection.find().toArray();
+
+            let totalRevenue = 0;
+            let paidTotal = 0;
+            let pendingTotal = 0;
+
+            allOrders.forEach(order => {
+                // Step 1:
+                const relevantItems = email
+                    ? order.items.filter(item => item.seller === email)
+                    : order.items;
+
+                if (relevantItems.length === 0) return;
+
+                // Step 2:
+                const itemTotal = relevantItems.reduce((sum, item) => {
+                    return sum + item.price * item.quantity;
+                }, 0);
+
+                // Step 3:
+                totalRevenue += itemTotal;
+
+                if (order.paymentStatus === "paid") {
+                    paidTotal += itemTotal;
+                } else {
+                    pendingTotal += itemTotal;
+                }
+            });
+
+            // Step 4:
+            res.send({
+                totalRevenue,
+                paidTotal,
+                pendingTotal,
+            });
+        });
 
         // Cart Items...........
 
