@@ -53,9 +53,33 @@ async function run() {
         // Api for user get
         app.get('/users', async (req, res) => {
             const email = req.query.email;
-            const result = await usersCollection.find({ email }).toArray()
+            if (!email) {
+                return res.send([]);
+            }
+            const regex = new RegExp(email, "i");
+            const result = await usersCollection.find({ email: regex }).toArray();
             res.send(result);
-        })
+        });
+
+        // Api for update user role
+        app.patch('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const { role } = req.body;
+
+            if (!role) {
+                return res.status(400).json({ message: "Role is required" });
+            }
+
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { role },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result);
+        });
+
+
 
         // Api for payment intant
         app.post("/create-payment-intent", async (req, res) => {
