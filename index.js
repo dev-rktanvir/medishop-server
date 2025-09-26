@@ -79,9 +79,9 @@ async function run() {
 
         // Api for get all ordrs
         app.get('/orders', async (req, res) => {
-            const email = req.query.email;
-            const buyer = req.query.buyer;
-            const filter = {}
+            const { email, buyer, start, end } = req.query;
+
+            const filter = {};
 
             if (email) {
                 filter["items.seller"] = email;
@@ -89,9 +89,18 @@ async function run() {
             if (buyer) {
                 filter.buyerEmail = buyer;
             }
-            const result = await ordersCollection.find(filter).toArray()
+
+            if (start && end) {
+                filter.$and = [
+                    { createdAt: { $gte: start } },
+                    { createdAt: { $lte: end + "T23:59:59.999Z" } }
+                ];
+            }
+            const result = await ordersCollection.find(filter).toArray();
             res.send(result);
-        })
+        });
+
+
         // Api for Order create
         app.post('/orders', async (req, res) => {
             const newOrder = req.body;
