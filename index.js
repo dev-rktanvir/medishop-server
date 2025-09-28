@@ -352,16 +352,73 @@ async function run() {
 
         // Api for get medicine
         app.get('/medicine', async (req, res) => {
-            const email = req.query.email;
-            const filter = {};
+            try {
+                const email = req.query.email;
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const search = req.query.search || "";
+                const sort = req.query.sort || "price_asc";
 
-            if (email) {
-                filter.sellerEmail = email;
+                const filter = {};
+
+                // sellerEmail filter
+                if (email) {
+                    filter.sellerEmail = email;
+
+                    const result = await medicinesCollection.find(filter).toArray()
+                    res.send(result);
+                }
+
+                // Search filter: name, genericName, company
+                if (search) {
+                    const searchRegex = new RegExp(search, "i");
+                    filter.$or = [
+                        { name: { $regex: searchRegex } },
+                        { genericName: { $regex: searchRegex } },
+                        { company: { $regex: searchRegex } }
+                    ];
+                }
+
+                // Pagination skip count
+                const skip = (page - 1) * limit;
+
+                // Sort condition
+                const sortCondition = {};
+                if (sort === "price_asc") {
+                    sortCondition.price = 1;
+                } else if (sort === "price_desc") {
+                    sortCondition.price = -1;
+                }
+
+                // Document count
+                const total = await medicinesCollection.countDocuments(filter);
+                
+                const result = await medicinesCollection
+                    .find(filter)
+                    .sort(sortCondition)
+                    .skip(skip)
+                    .limit(limit)
+                    .toArray();
+
+                res.send({
+                    data: result,
+                    total,
+                    page,
+                    totalPages: Math.ceil(total / limit),
+                });
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ error: "Internal Server Error" });
             }
+        });
 
-            const result = await medicinesCollection.find(filter).toArray();
+        // Api for discount
+        app.get('/discount', async (req, res) => {
+            const result = await medicinesCollection.find().toArray()
             res.send(result);
         })
+
+
 
         // Api for get specific category medicine
         app.get('/medicine/:name', async (req, res) => {
