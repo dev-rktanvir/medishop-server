@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         // DB collections
         const usersCollection = client.db('MediShopDB').collection('users')
@@ -35,6 +35,7 @@ async function run() {
         const medicinesCollection = client.db('MediShopDB').collection('medicines')
         const cartItemsCollection = client.db('MediShopDB').collection('cartItems')
         const ordersCollection = client.db('MediShopDB').collection('orders')
+        const messageCollection = client.db('MediShopDB').collection('message')
 
         // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
@@ -47,6 +48,13 @@ async function run() {
 
             const newUser = req.body;
             const result = await usersCollection.insertOne(newUser)
+            res.send(result);
+        })
+
+        // Api for contact message
+        app.post('/message', async (req, res) => {
+            const messageData = req.body;
+            const result = await messageCollection.insertOne(messageData)
             res.send(result);
         })
 
@@ -472,8 +480,8 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
