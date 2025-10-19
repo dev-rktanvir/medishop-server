@@ -36,6 +36,8 @@ async function run() {
         const cartItemsCollection = client.db('MediShopDB').collection('cartItems')
         const ordersCollection = client.db('MediShopDB').collection('orders')
         const messageCollection = client.db('MediShopDB').collection('message')
+        const prescriptionCollection = client.db('MediShopDB').collection('prescription')
+        const orderCollection = client.db('MediShopDB').collection('order')
 
         // Api for add user & prevent duplicate entry
         app.post('/users', async (req, res) => {
@@ -55,6 +57,18 @@ async function run() {
         app.post('/message', async (req, res) => {
             const messageData = req.body;
             const result = await messageCollection.insertOne(messageData)
+            res.send(result);
+        })
+        // Api for Order request
+        app.post('/order-req', async (req, res) => {
+            const orderData = req.body;
+            const result = await orderCollection.insertOne(orderData)
+            res.send(result);
+        })
+        // Api for upload prescription
+        app.post('/prescription', async (req, res) => {
+            const prescriptionData = req.body;
+            const result = await prescriptionCollection.insertOne(prescriptionData)
             res.send(result);
         })
 
@@ -400,7 +414,7 @@ async function run() {
 
                 // Document count
                 const total = await medicinesCollection.countDocuments(filter);
-                
+
                 const result = await medicinesCollection
                     .find(filter)
                     .sort(sortCondition)
